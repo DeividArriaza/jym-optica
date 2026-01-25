@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Secuencia para número de ficha -->
+        <record id="sequence_paciente_ficha" model="ir.sequence">
+            <field name="name">Ficha de Paciente Óptica</field>
+            <field name="code">optica.paciente.ficha</field>
+            <field name="prefix">F-</field>
+            <field name="padding">5</field>
+        </record>
+
+        <!-- Extensión del formulario de contacto para pacientes de óptica -->
+        <record id="view_partner_form_optica" model="ir.ui.view">
+            <field name="name">res.partner.form.optica</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="arch" type="xml">
+                <!-- Agregar botones de óptica en el header -->
+                <xpath expr="//form/sheet" position="before">
+                    <header invisible="not is_optica_patient">
+                        <button name="action_nueva_cita_optica" string="Nueva Cita" type="object" class="oe_highlight"/>
+                        <button name="action_nueva_consulta" string="Registrar Consulta" type="object" class="oe_highlight"/>
+                    </header>
+                </xpath>
+
+                <!-- Agregar botones de estadísticas -->
+                <xpath expr="//div[@name='button_box']" position="inside">
+                    <button name="action_ver_consultas" type="object" class="oe_stat_button" icon="fa-stethoscope" invisible="not is_optica_patient">
+                        <field name="consulta_count" widget="statinfo" string="Consultas"/>
+                    </button>
+                    <button name="action_ver_citas_optica" type="object" class="oe_stat_button" icon="fa-calendar" invisible="not is_optica_patient">
+                        <field name="cita_optica_count" widget="statinfo" string="Citas Óptica"/>
+                    </button>
+                </xpath>
+
+                <!-- Agregar checkbox de paciente y ficha después del nombre -->
+                <xpath expr="//field[@name='company_type']" position="after">
+                    <field name="is_optica_patient"/>
+                    <field name="ficha_numero" readonly="1" invisible="not is_optica_patient"/>
+                </xpath>
+
+                <!-- Agregar campos adicionales de paciente -->
+                <xpath expr="//field[@name='phone']" position="after">
+                    <field name="fecha_nacimiento" invisible="not is_optica_patient"/>
+                    <field name="edad" invisible="not is_optica_patient"/>
+                    <field name="ocupacion" invisible="not is_optica_patient"/>
+                    <field name="referencia" invisible="not is_optica_patient" placeholder="¿Cómo se enteró de nosotros?"/>
+                </xpath>
+
+                <!-- Agregar notebook de óptica -->
+                <xpath expr="//notebook" position="inside">
+                    <!-- Pestaña de Historial de Consultas -->
+                    <page string="Historial de Consultas" name="historial_consultas" invisible="not is_optica_patient">
+                        <field name="consulta_ids" readonly="1">
+                            <list string="Historial de Exámenes" default_order="fecha desc">
+                                <field name="fecha" string="Fecha"/>
+                                <field name="optometrista_id" string="Optometrista"/>
+                                <field name="av_sl_od" string="AV/SL OD"/>
+                                <field name="av_sl_oi" string="AV/SL OI"/>
+                                <field name="rx_od_esfera" string="RX OD Esf"/>
+                                <field name="rx_od_cilindro" string="RX OD Cil"/>
+                                <field name="rx_oi_esfera" string="RX OI Esf"/>
+                                <field name="rx_oi_cilindro" string="RX OI Cil"/>
+                                <field name="tipo_lente" string="Tipo Lente"/>
+                                <field name="diagnostico" string="Diagnóstico"/>
+                            </list>
+                        </field>
+                    </page>
+
+                    <!-- Pestaña de Ficha de Examen -->
+                    <page string="Ficha de Examen" name="ficha_examen" invisible="not is_optica_patient">
+                        <group string="Historial del Paciente">
+                            <group>
+                                <field name="evaluacion_visual_previa" widget="radio" options="{'horizontal': true}"/>
+                                <field name="fecha_ultima_evaluacion" invisible="evaluacion_visual_previa != 'si'"/>
+                                <field name="padece_enfermedad" widget="radio" options="{'horizontal': true}"/>
+                                <field name="enfermedades" invisible="padece_enfermedad != 'si'" placeholder="Especificar enfermedades..."/>
+                                <field name="usa_computadora" widget="radio" options="{'horizontal': true}"/>
+                            </group>
+                            <group>
+                                <field name="antecedentes_familiares" widget="radio" options="{'horizontal': true}"/>
+                                <field name="antecedentes_familiares_detalle" invisible="antecedentes_familiares != 'si'" placeholder="Glaucoma, cataratas, etc..."/>
+                                <field name="usa_lentes" widget="radio"/>
+                                <field name="tipo_lentes_previos" invisible="usa_lentes == 'no'" placeholder="Tipo de lentes usados..."/>
+                            </group>
+                        </group>
+                        
+                        <group string="Condiciones Médicas">
+                            <group>
+                                <field name="embarazo" widget="radio" options="{'horizontal': true}"/>
+                                <field name="diabetes"/>
+                            </group>
+                            <group>
+                                <field name="presion_arterial"/>
+                                <field name="cirugia_previa"/>
+                            </group>
+                        </group>
+                        
+                        <group string="Síntomas">
+                            <group>
+                                <field name="sintoma_cefalea"/>
+                                <field name="sintoma_ardor"/>
+                                <field name="sintoma_dolor"/>
+                                <field name="sintoma_ojo_rojo"/>
+                                <field name="sintoma_fotofobia"/>
+                                <field name="sintoma_glaucoma"/>
+                            </group>
+                            <group>
+                                <field name="sintoma_vision_borrosa"/>
+                                <field name="sintoma_secreciones"/>
+                                <field name="sintoma_cansancio"/>
+                                <field name="sintoma_moscas_volantes"/>
+                                <field name="sintoma_otros"/>
+                                <field name="sintoma_otros_descripcion" invisible="not sintoma_otros"/>
+                            </group>
+                        </group>
+                        
+                        <group string="Información Adicional">
+                            <group>
+                                <field name="alergias" placeholder="Alergias conocidas..."/>
+                            </group>
+                            <group>
+                                <field name="notas_medicas" placeholder="Notas médicas adicionales..."/>
+                            </group>
+                        </group>
+                    </page>
+
+                    <!-- Pestaña de Citas de Óptica -->
+                    <page string="Citas Óptica" name="citas_optica" invisible="not is_optica_patient">
+                        <field name="cita_optica_ids" readonly="1">
+                            <list>
+                                <field name="fecha"/>
+                                <field name="hora_inicio" widget="float_time"/>
+                                <field name="optometrista_id"/>
+                                <field name="motivo"/>
+                                <field name="state" widget="badge"/>
+                            </list>
+                        </field>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Vista de lista de pacientes de óptica -->
+        <record id="view_partner_list_optica" model="ir.ui.view">
+            <field name="name">res.partner.list.optica</field>
+            <field name="model">res.partner</field>
+            <field name="arch" type="xml">
+                <list string="Pacientes de Óptica">
+                    <field name="ficha_numero"/>
+                    <field name="name"/>
+                    <field name="edad"/>
+                    <field name="phone"/>
+                    <field name="ocupacion" optional="hide"/>
+                    <field name="ultima_consulta_fecha" string="Última Consulta"/>
+                    <field name="consulta_count" string="Consultas"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Vista de búsqueda de pacientes de óptica -->
+        <record id="view_partner_search_optica" model="ir.ui.view">
+            <field name="name">res.partner.search.optica</field>
+            <field name="model">res.partner</field>
+            <field name="arch" type="xml">
+                <search string="Buscar Paciente">
+                    <field name="name"/>
+                    <field name="ficha_numero"/>
+                    <field name="phone"/>
+                    <separator/>
+                    <filter string="Usa Lentes" name="usa_lentes" domain="[('usa_lentes', '!=', 'no')]"/>
+                    <filter string="Con Diabetes" name="diabetes" domain="[('diabetes', '=', True)]"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- Acción de ventana para pacientes de óptica -->
+        <record id="action_pacientes_optica" model="ir.actions.act_window">
+            <field name="name">Pacientes</field>
+            <field name="res_model">res.partner</field>
+            <field name="view_mode">list,kanban,form</field>
+            <field name="domain">[('is_optica_patient', '=', True)]</field>
+            <field name="context">{'default_is_optica_patient': True}</field>
+            <field name="view_ids" eval="[(5, 0, 0),
+                (0, 0, {'view_mode': 'list', 'view_id': ref('view_partner_list_optica')}),
+                (0, 0, {'view_mode': 'form'})]"/>
+            <field name="search_view_id" ref="view_partner_search_optica"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Registrar un nuevo paciente
+                </p>
+                <p>
+                    Los pacientes se guardan como Contactos de Odoo, permitiendo integración con Ventas, Facturación y CRM.
+                </p>
+            </field>
+        </record>
+    </data>
+</odoo>

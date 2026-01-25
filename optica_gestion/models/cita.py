@@ -1,5 +1,4 @@
 from odoo import models, fields, api
-from odoo.exceptions import ValidationError
 from datetime import timedelta
 
 
@@ -9,12 +8,13 @@ class OpticaCita(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'fecha desc, hora_inicio'
 
-    paciente_id = fields.Many2one(
-        'optica.paciente',
+    partner_id = fields.Many2one(
+        'res.partner',
         string='Paciente',
         required=True,
         ondelete='cascade',
-        tracking=True
+        tracking=True,
+        domain=[('is_optica_patient', '=', True)]
     )
     
     fecha = fields.Date(
@@ -81,7 +81,7 @@ class OpticaCita(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
-        if any(field in vals for field in ['fecha', 'hora_inicio', 'duracion', 'paciente_id', 'motivo']):
+        if any(field in vals for field in ['fecha', 'hora_inicio', 'duracion', 'partner_id', 'motivo']):
             for record in self:
                 record._update_calendar_event()
         return res
@@ -107,11 +107,12 @@ class OpticaCita(models.Model):
         stop_datetime = start_datetime + timedelta(hours=duration_hours, minutes=duration_minutes)
         
         event = self.env['calendar.event'].create({
-            'name': f"Cita: {self.paciente_id.name}",
+            'name': f"Cita Óptica: {self.partner_id.name}",
             'start': start_datetime,
             'stop': stop_datetime,
             'description': self.motivo or '',
             'user_id': self.optometrista_id.id if self.optometrista_id else self.env.user.id,
+            'partner_ids': [(4, self.partner_id.id)],
         })
         self.calendar_event_id = event.id
 
@@ -131,10 +132,11 @@ class OpticaCita(models.Model):
         stop_datetime = start_datetime + timedelta(hours=duration_hours, minutes=duration_minutes)
         
         self.calendar_event_id.write({
-            'name': f"Cita: {self.paciente_id.name}",
+            'name': f"Cita Óptica: {self.partner_id.name}",
             'start': start_datetime,
             'stop': stop_datetime,
             'description': self.motivo or '',
+            'partner_ids': [(6, 0, [self.partner_id.id])],
         })
 
     def action_confirmar(self):
@@ -160,5 +162,5 @@ class OpticaCita(models.Model):
             'res_model': 'optica.consulta',
             'view_mode': 'form',
             'target': 'current',
-            'context': {'default_paciente_id': self.paciente_id.id}
+            'context': {'default_partner_id': self.partner_id.id}
         }

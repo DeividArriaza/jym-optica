@@ -9,9 +9,9 @@
 
         <!-- Pacientes -->
         <menuitem id="menu_optica_pacientes"
-            name="Registrar Pacientes"
+            name="Pacientes"
             parent="menu_optica_root"
-            action="action_paciente"
+            action="action_pacientes_optica"
             sequence="10"/>
 
         <!-- Registrar Consulta -->

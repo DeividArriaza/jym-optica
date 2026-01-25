@@ -1,20 +1,20 @@
 {
     'name': 'Gestión de Óptica',
-    'version': '19.0.1.0.0',
+    'version': '19.0.2.0.0',
     'category': 'Healthcare',
-    'summary': 'Sistema de gestión de pacientes y citas para ópticas',
+    'summary': 'Sistema de gestión de pacientes y consultas para ópticas',
     'description': """
         Módulo para gestión integral de ópticas:
-        - Registro y expedientes de pacientes
+        - Pacientes integrados con Contactos de Odoo
         - Historial de consultas con graduaciones
         - Agenda de citas integrada con calendario
-        - Control de lista negra
+        - Compatible con Ventas, Facturación, CRM
     """,
     'author': 'Adroc',
-    'depends': ['base', 'mail', 'calendar'],
+    'depends': ['base', 'mail', 'calendar', 'contacts'],
     'data': [
         'security/ir.model.access.csv',
-        'views/paciente_views.xml',
+        'views/partner_views.xml',
         'views/consulta_views.xml',
         'views/cita_views.xml',
         'views/menu_views.xml',

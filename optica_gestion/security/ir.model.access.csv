@@ -1,5 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_optica_paciente,optica.paciente,model_optica_paciente,base.group_user,1,1,1,1
 access_optica_consulta,optica.consulta,model_optica_consulta,base.group_user,1,1,1,1
 access_optica_cita,optica.cita,model_optica_cita,base.group_user,1,1,1,1
 access_optica_dibujo_clinico,optica.dibujo.clinico,model_optica_dibujo_clinico,base.group_user,1,1,1,1

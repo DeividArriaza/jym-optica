@@ -8,22 +8,23 @@ class OpticaConsulta(models.Model):
     _order = 'fecha desc, id desc'
     _rec_name = 'display_name'
 
-    # Relación con paciente
-    paciente_id = fields.Many2one(
-        'optica.paciente',
+    # Relación con contacto (paciente)
+    partner_id = fields.Many2one(
+        'res.partner',
         string='Paciente',
         required=True,
         ondelete='cascade',
-        tracking=True
+        tracking=True,
+        domain=[('is_optica_patient', '=', True)]
     )
 
     # Datos heredados del paciente
-    paciente_telefono = fields.Char(
-        related='paciente_id.telefono',
+    partner_telefono = fields.Char(
+        related='partner_id.phone',
         string='Teléfono'
     )
-    paciente_edad = fields.Integer(
-        related='paciente_id.edad',
+    partner_edad = fields.Integer(
+        related='partner_id.edad',
         string='Edad'
     )
 
@@ -133,11 +134,11 @@ class OpticaConsulta(models.Model):
         store=True
     )
 
-    @api.depends('paciente_id', 'fecha')
+    @api.depends('partner_id', 'fecha')
     def _compute_display_name(self):
         for record in self:
-            if record.paciente_id and record.fecha:
-                record.display_name = f"{record.paciente_id.name} - {record.fecha}"
+            if record.partner_id and record.fecha:
+                record.display_name = f"{record.partner_id.name} - {record.fecha}"
             else:
                 record.display_name = "Nueva Consulta"
 
@@ -150,7 +151,7 @@ class OpticaConsulta(models.Model):
             'view_mode': 'form',
             'target': 'new',
             'context': {
-                'default_paciente_id': self.paciente_id.id,
+                'default_partner_id': self.partner_id.id,
                 'default_motivo': 'Seguimiento de consulta del %s' % self.fecha,
                 'default_fecha': self.proxima_cita_sugerida or fields.Date.today(),
             }
