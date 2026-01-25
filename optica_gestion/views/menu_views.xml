@@ -7,38 +7,21 @@
             sequence="10"
             web_icon="optica_gestion,static/description/icon.png"/>
 
-        <!-- Submenú Pacientes -->
+        <!-- Pacientes -->
         <menuitem id="menu_optica_pacientes"
-            name="Pacientes"
+            name="Registrar Pacientes"
             parent="menu_optica_root"
-            sequence="10"/>
-
-        <menuitem id="menu_paciente_list"
-            name="Todos los Pacientes"
-            parent="menu_optica_pacientes"
             action="action_paciente"
             sequence="10"/>
 
-        <menuitem id="menu_paciente_lista_negra"
-            name="Lista Negra"
-            parent="menu_optica_pacientes"
-            action="action_paciente_lista_negra"
-            sequence="20"/>
-
-        <menuitem id="menu_paciente_archivados"
-            name="Pacientes Archivados"
-            parent="menu_optica_pacientes"
-            action="action_paciente_archivados"
-            sequence="30"/>
-
-        <!-- Submenú Registrar Consulta -->
+        <!-- Registrar Consulta -->
         <menuitem id="menu_optica_consultas"
             name="Registrar Consulta"
             parent="menu_optica_root"
             action="action_consulta"
             sequence="20"/>
 
-        <!-- Submenú Citas -->
+        <!-- Citas -->
         <menuitem id="menu_optica_citas"
             name="Citas"
             parent="menu_optica_root"
