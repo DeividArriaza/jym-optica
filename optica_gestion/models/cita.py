@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError
 from datetime import timedelta
 
 
@@ -32,18 +33,25 @@ class OpticaCita(models.Model):
     
     hora_fin = fields.Float(
         string='Hora de Fin',
-        compute='_compute_hora_fin',
+        required=True,
+        default=9.5
+    )
+    
+    duracion = fields.Char(
+        string='Duración',
+        compute='_compute_duracion',
         store=True
     )
     
-    duracion = fields.Float(
-        string='Duración (horas)',
-        default=0.5
+    cantidad_personas = fields.Integer(
+        string='Cantidad de Personas',
+        default=1,
+        help='Número de personas que asistirán a la cita'
     )
     
     optometrista_id = fields.Many2one(
         'res.users',
-        string='Optometrista',
+        string='Asignado a',
         default=lambda self: self.env.user,
         tracking=True
     )
@@ -67,13 +75,38 @@ class OpticaCita(models.Model):
         ondelete='set null'
     )
 
-    @api.depends('hora_inicio', 'duracion')
-    def _compute_hora_fin(self):
+    @api.onchange('partner_id')
+    def _onchange_partner_id_blacklist(self):
+        """Advertir si el paciente está en lista negra"""
+        if self.partner_id and self.partner_id.blacklisted:
+            return {
+                'warning': {
+                    'title': 'Paciente en Lista Negra',
+                    'message': f'{self.partner_id.name} está en la Lista Negra. No se permitirá guardar esta cita.',
+                    'type': 'notification'
+                }
+            }
+
+    @api.depends('hora_inicio', 'hora_fin')
+    def _compute_duracion(self):
         for record in self:
-            record.hora_fin = record.hora_inicio + record.duracion
+            diff = record.hora_fin - record.hora_inicio
+            if diff < 0:
+                diff = 0
+            horas = int(diff)
+            minutos = int((diff - horas) * 60)
+            record.duracion = f"{horas}:{minutos:02d}"
 
     @api.model_create_multi
     def create(self, vals_list):
+        # Validar lista negra al crear
+        for vals in vals_list:
+            if vals.get('partner_id'):
+                partner = self.env['res.partner'].browse(vals['partner_id'])
+                if partner.blacklisted:
+                    raise ValidationError(
+                        f"No se puede agendar cita para {partner.name} porque está en la Lista Negra."
+                    )
         records = super().create(vals_list)
         for record in records:
             record._create_calendar_event()
@@ -81,7 +114,7 @@ class OpticaCita(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
-        if any(field in vals for field in ['fecha', 'hora_inicio', 'duracion', 'partner_id', 'motivo']):
+        if any(field in vals for field in ['fecha', 'hora_inicio', 'hora_fin', 'partner_id', 'motivo']):
             for record in self:
                 record._update_calendar_event()
         return res
@@ -102,9 +135,9 @@ class OpticaCita(models.Model):
         minutes = int((self.hora_inicio - hours) * 60)
         start_datetime = start_datetime.replace(hour=hours, minute=minutes)
         
-        duration_hours = int(self.duracion)
-        duration_minutes = int((self.duracion - duration_hours) * 60)
-        stop_datetime = start_datetime + timedelta(hours=duration_hours, minutes=duration_minutes)
+        end_hours = int(self.hora_fin)
+        end_minutes = int((self.hora_fin - end_hours) * 60)
+        stop_datetime = fields.Datetime.to_datetime(self.fecha).replace(hour=end_hours, minute=end_minutes)
         
         event = self.env['calendar.event'].create({
             'name': f"Cita Óptica: {self.partner_id.name}",
@@ -127,9 +160,9 @@ class OpticaCita(models.Model):
         minutes = int((self.hora_inicio - hours) * 60)
         start_datetime = start_datetime.replace(hour=hours, minute=minutes)
         
-        duration_hours = int(self.duracion)
-        duration_minutes = int((self.duracion - duration_hours) * 60)
-        stop_datetime = start_datetime + timedelta(hours=duration_hours, minutes=duration_minutes)
+        end_hours = int(self.hora_fin)
+        end_minutes = int((self.hora_fin - end_hours) * 60)
+        stop_datetime = fields.Datetime.to_datetime(self.fecha).replace(hour=end_hours, minute=end_minutes)
         
         self.calendar_event_id.write({
             'name': f"Cita Óptica: {self.partner_id.name}",
@@ -139,17 +172,41 @@ class OpticaCita(models.Model):
             'partner_ids': [(6, 0, [self.partner_id.id])],
         })
 
+    def action_guardar_borrador(self):
+        """Guarda la cita en estado borrador. La validación de lista negra se ejecuta automáticamente."""
+        return True
+
     def action_confirmar(self):
+        """Confirmar cita - valida lista negra"""
+        for record in self:
+            if record.partner_id and record.partner_id.blacklisted:
+                raise ValidationError(
+                    f"No se puede confirmar cita para {record.partner_id.name} porque está en la Lista Negra."
+                )
         self.write({'state': 'confirmada'})
 
     def action_completar(self):
         self.write({'state': 'completada'})
 
     def action_cancelar(self):
-        self.write({'state': 'cancelada'})
+        """Cancelar cita - usa SQL directo para evitar validaciones"""
+        if self.ids:
+            self.env.cr.execute(
+                "UPDATE optica_cita SET state = 'cancelada' WHERE id IN %s",
+                [tuple(self.ids)]
+            )
+            self.invalidate_recordset(['state'])
+        return True
 
     def action_no_asistio(self):
-        self.write({'state': 'no_asistio'})
+        """Marcar como no asistió - usa SQL directo para evitar validaciones"""
+        if self.ids:
+            self.env.cr.execute(
+                "UPDATE optica_cita SET state = 'no_asistio' WHERE id IN %s",
+                [tuple(self.ids)]
+            )
+            self.invalidate_recordset(['state'])
+        return True
 
     def action_reabrir(self):
         self.write({'state': 'borrador'})

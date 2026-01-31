@@ -11,11 +11,11 @@
         - Compatible con Ventas, Facturación, CRM
     """,
     'author': 'Adroc',
-    'depends': ['base', 'mail', 'calendar', 'contacts'],
+    'depends': ['base', 'mail', 'calendar', 'contacts', 'account'],
     'data': [
         'security/ir.model.access.csv',
-        'views/partner_views.xml',
         'views/consulta_views.xml',
+        'views/partner_views.xml',
         'views/cita_views.xml',
         'views/menu_views.xml',
     ],

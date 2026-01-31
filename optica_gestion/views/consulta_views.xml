@@ -1,218 +1,188 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!-- Vista de formulario de consulta -->
-        <record id="view_consulta_form" model="ir.ui.view">
-            <field name="name">optica.consulta.form</field>
-            <field name="model">optica.consulta</field>
-            <field name="arch" type="xml">
-                <form string="Consulta / Examen Visual">
-                    <header>
-                        <button name="action_crear_cita_seguimiento" string="Programar Seguimiento" type="object" class="oe_highlight"/>
-                    </header>
-                    <sheet>
-                        <div class="oe_title">
-                            <h1>
-                                <span>Consulta - </span>
-                                <field name="partner_id" options="{'no_create': True}" placeholder="Seleccionar Paciente" domain="[('is_optica_patient', '=', True)]"/>
-                            </h1>
-                        </div>
-                        
-                        <group>
-                            <group string="Información de la Consulta">
-                                <field name="fecha"/>
-                                <field name="optometrista_id"/>
-                                <field name="motivo_consulta" placeholder="Motivo de la consulta..."/>
-                            </group>
-                            <group string="Datos del Paciente">
-                                <field name="partner_telefono" readonly="1"/>
-                                <field name="partner_edad" readonly="1"/>
-                            </group>
-                        </group>
-                        
-                        <notebook>
-                            <!-- EXAMEN VISUAL -->
-                            <page string="Examen Visual" name="examen_visual">
-                                <!-- Agudeza Visual -->
-                                <group string="Agudeza Visual (AV)">
-                                    <group string="Sin Lentes (AV/SL)">
-                                        <field name="av_sl_od" placeholder="20/"/>
-                                        <field name="av_sl_oi" placeholder="20/"/>
-                                    </group>
-                                    <group string="Con Lentes (AV/CL)">
-                                        <field name="av_cl_od" placeholder="20/"/>
-                                        <field name="av_cl_oi" placeholder="20/"/>
-                                    </group>
-                                </group>
-                                
-                                <!-- Lensometría -->
-                                <group string="Lensometría (Lentes Actuales)">
-                                    <group>
-                                        <field name="lensometria_od" placeholder="Graduación lente actual OD"/>
-                                    </group>
-                                    <group>
-                                        <field name="lensometria_oi" placeholder="Graduación lente actual OI"/>
-                                    </group>
-                                </group>
-                                
-                                <!-- Retinoscopía -->
-                                <group string="Retinoscopía">
-                                    <group string="Ojo Derecho (OD)">
-                                        <field name="ret_od_esfera" placeholder="Esfera"/>
-                                        <field name="ret_od_cilindro" placeholder="Cilindro"/>
-                                        <field name="ret_od_eje" placeholder="Eje"/>
-                                    </group>
-                                    <group string="Ojo Izquierdo (OI)">
-                                        <field name="ret_oi_esfera" placeholder="Esfera"/>
-                                        <field name="ret_oi_cilindro" placeholder="Cilindro"/>
-                                        <field name="ret_oi_eje" placeholder="Eje"/>
-                                    </group>
-                                </group>
-                                
-                                <!-- RX Nueva (Graduación Final) -->
-                                <group string="RX Nueva (Graduación Final)">
-                                    <group string="Ojo Derecho (OD)">
-                                        <field name="rx_od_esfera" placeholder="Esfera"/>
-                                        <field name="rx_od_cilindro" placeholder="Cilindro"/>
-                                        <field name="rx_od_eje" placeholder="Eje"/>
-                                        <field name="rx_od_add" placeholder="ADD"/>
-                                    </group>
-                                    <group string="Ojo Izquierdo (OI)">
-                                        <field name="rx_oi_esfera" placeholder="Esfera"/>
-                                        <field name="rx_oi_cilindro" placeholder="Cilindro"/>
-                                        <field name="rx_oi_eje" placeholder="Eje"/>
-                                        <field name="rx_oi_add" placeholder="ADD"/>
-                                    </group>
-                                </group>
-                                
-                                <!-- DIP y Presión -->
-                                <group string="Mediciones Adicionales">
-                                    <group string="DIP (Distancia Interpupilar)">
-                                        <field name="dip_od"/>
-                                        <field name="dip_oi"/>
-                                        <field name="dip_total"/>
-                                    </group>
-                                    <group string="Presión Intraocular">
-                                        <field name="presion_od"/>
-                                        <field name="presion_oi"/>
-                                    </group>
-                                </group>
-                            </page>
-                            
-                            <!-- OBSERVACIONES CLÍNICAS -->
-                            <page string="Observaciones Clínicas" name="observaciones">
-                                <group>
-                                    <group>
-                                        <field name="anexos_oculares" placeholder="Anexos oculares..."/>
-                                        <field name="fondo_ojo" placeholder="Fondo de ojo..."/>
-                                    </group>
-                                    <group>
-                                        <field name="diagnostico" placeholder="Diagnóstico..."/>
-                                        <field name="observaciones" placeholder="Observaciones generales..."/>
-                                    </group>
-                                </group>
-                                <group>
-                                    <field name="recomendaciones" placeholder="Recomendaciones para el paciente..."/>
-                                </group>
-                                <group string="Notas de Graduación">
-                                    <field name="notas" nolabel="1" placeholder="Notas adicionales sobre la graduación..."/>
-                                </group>
-                            </page>
-                            
-                            <!-- PRODUCTO/VENTA -->
-                            <page string="Producto" name="producto">
-                                <group string="Tipo de Lente">
-                                    <group>
-                                        <field name="tipo_lente"/>
-                                        <field name="material_lente"/>
-                                    </group>
-                                    <group>
-                                        <field name="tratamientos_lente"/>
-                                    </group>
-                                </group>
-                                <group string="Armazón">
-                                    <group>
-                                        <field name="armazon_marca" placeholder="Marca"/>
-                                        <field name="armazon_modelo" placeholder="Modelo"/>
-                                    </group>
-                                    <group>
-                                        <field name="armazon_color" placeholder="Color"/>
-                                    </group>
-                                </group>
-                                <group string="Seguimiento">
-                                    <field name="proxima_cita_sugerida"/>
-                                </group>
-                            </page>
-                            
-                            <!-- DIBUJOS CLÍNICOS -->
-                            <page string="Dibujos Clínicos" name="dibujos">
-                                <button name="action_agregar_dibujo" string="Agregar Dibujo" type="object" class="btn-primary mb-3"/>
-                                <field name="dibujo_ids">
-                                    <kanban>
-                                        <field name="nombre"/>
-                                        <field name="imagen"/>
-                                        <field name="tipo"/>
-                                        <templates>
-                                            <t t-name="card">
-                                                <field name="imagen" widget="image" options="{'size': [200, 200]}"/>
-                                                <div><field name="nombre"/></div>
-                                                <div class="text-muted"><field name="tipo"/></div>
-                                            </t>
-                                        </templates>
-                                    </kanban>
-                                </field>
-                            </page>
-                        </notebook>
-                    </sheet>
-                    <chatter/>
-                </form>
-            </field>
-        </record>
-
         <!-- Vista de lista de consultas -->
-        <record id="view_consulta_list" model="ir.ui.view">
+        <record id="view_optica_consulta_list" model="ir.ui.view">
             <field name="name">optica.consulta.list</field>
             <field name="model">optica.consulta</field>
             <field name="arch" type="xml">
-                <list string="Consultas" default_order="fecha desc">
+                <list string="Consultas">
                     <field name="fecha"/>
-                    <field name="partner_id"/>
-                    <field name="partner_telefono" string="Teléfono" optional="show"/>
-                    <field name="optometrista_id"/>
-                    <field name="rx_od_esfera" string="OD Esf"/>
-                    <field name="rx_od_cilindro" string="OD Cil"/>
-                    <field name="rx_oi_esfera" string="OI Esf"/>
-                    <field name="rx_oi_cilindro" string="OI Cil"/>
-                    <field name="tipo_lente"/>
+                    <field name="partner_id" string="Paciente"/>
+                    <field name="edad_consulta" string="Edad"/>
+                    <field name="rx_od_esfera" string="RX OD Esf"/>
+                    <field name="rx_od_cilindro" string="RX OD Cil"/>
+                    <field name="rx_oi_esfera" string="RX OI Esf"/>
+                    <field name="rx_oi_cilindro" string="RX OI Cil"/>
+                    <field name="rx_observaciones" string="Observaciones" optional="hide"/>
                 </list>
             </field>
         </record>
 
-        <!-- Vista de búsqueda de consultas -->
-        <record id="view_consulta_search" model="ir.ui.view">
-            <field name="name">optica.consulta.search</field>
+        <!-- Vista de formulario de consulta (popup desde contacto) -->
+        <record id="view_optica_consulta_form" model="ir.ui.view">
+            <field name="name">optica.consulta.form</field>
             <field name="model">optica.consulta</field>
             <field name="arch" type="xml">
-                <search string="Buscar Consulta">
-                    <field name="partner_id"/>
-                    <field name="fecha"/>
-                    <field name="optometrista_id"/>
-                </search>
-            </field>
-        </record>
+                <form string="Consulta">
+                    <sheet>
+                        <!-- Encabezado: Paciente y Edad -->
+                        <div class="oe_title">
+                            <h1>
+                                <span>Paciente: </span>
+                                <field name="partner_id" readonly="1" options="{'no_open': True}" class="oe_inline"/>
+                            </h1>
+                            <h3>
+                                <span>Edad: </span>
+                                <field name="edad_consulta" class="oe_inline"/>
+                            </h3>
+                        </div>
 
-        <!-- Acción de ventana para consultas -->
-        <record id="action_consulta" model="ir.actions.act_window">
-            <field name="name">Registrar Consulta</field>
-            <field name="res_model">optica.consulta</field>
-            <field name="view_mode">list,form</field>
-            <field name="help" type="html">
-                <p class="o_view_nocontent_smiling_face">
-                    Registrar nueva consulta
-                </p>
-                <p>
-                    Registre los exámenes visuales de sus pacientes.
-                </p>
+                        <group>
+                            <group>
+                                <field name="fecha" string="Fecha" readonly="1"/>
+                            </group>
+                            <group>
+                                <field name="optometrista_id" string="Realizado por"/>
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="Alcance Visual">
+                                <!-- AV -->
+                                <separator string="AV"/>
+                                <div class="o_group">
+                                    <table class="table table-sm table-bordered" style="width: auto;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width: 60px;">AV</th>
+                                                <th style="width: 120px;">AV/SL</th>
+                                                <th style="width: 120px;">AV/CL</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>OD</strong></td>
+                                                <td><span class="text-muted">20/</span><field name="av_sl_od" nolabel="1" class="oe_inline" style="width: 50px;"/></td>
+                                                <td><span class="text-muted">20/</span><field name="av_cl_od" nolabel="1" class="oe_inline" style="width: 50px;"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>OI</strong></td>
+                                                <td><span class="text-muted">20/</span><field name="av_sl_oi" nolabel="1" class="oe_inline" style="width: 50px;"/></td>
+                                                <td><span class="text-muted">20/</span><field name="av_cl_oi" nolabel="1" class="oe_inline" style="width: 50px;"/></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- LENSOMETRÍA -->
+                                <separator string="LENSOMETRÍA"/>
+                                <div class="o_group">
+                                    <table class="table table-sm table-bordered" style="width: auto;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width: 60px;">Ojo</th>
+                                                <th style="width: 80px;">Esfera</th>
+                                                <th style="width: 80px;">Cilindro</th>
+                                                <th style="width: 60px;">Eje</th>
+                                                <th style="width: 60px;">ADD</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>OD</strong></td>
+                                                <td><field name="lens_od_esfera" nolabel="1"/></td>
+                                                <td><field name="lens_od_cilindro" nolabel="1"/></td>
+                                                <td><field name="lens_od_eje" nolabel="1"/></td>
+                                                <td><field name="lens_od_add" nolabel="1"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>OI</strong></td>
+                                                <td><field name="lens_oi_esfera" nolabel="1"/></td>
+                                                <td><field name="lens_oi_cilindro" nolabel="1"/></td>
+                                                <td><field name="lens_oi_eje" nolabel="1"/></td>
+                                                <td><field name="lens_oi_add" nolabel="1"/></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- RETINOSCOPÍA -->
+                                <separator string="RETINOSCOPÍA"/>
+                                <div class="o_group">
+                                    <table class="table table-sm table-bordered" style="width: auto;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width: 60px;">OJO</th>
+                                                <th style="width: 80px;">ESFERA</th>
+                                                <th style="width: 80px;">CILINDRO</th>
+                                                <th style="width: 60px;">EJE</th>
+                                                <th style="width: 60px;">AV</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>OD</strong></td>
+                                                <td><field name="ret_od_esfera" nolabel="1"/></td>
+                                                <td><field name="ret_od_cilindro" nolabel="1"/></td>
+                                                <td><field name="ret_od_eje" nolabel="1"/></td>
+                                                <td><field name="ret_od_av" nolabel="1"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>OI</strong></td>
+                                                <td><field name="ret_oi_esfera" nolabel="1"/></td>
+                                                <td><field name="ret_oi_cilindro" nolabel="1"/></td>
+                                                <td><field name="ret_oi_eje" nolabel="1"/></td>
+                                                <td><field name="ret_oi_av" nolabel="1"/></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- RX/Nueva -->
+                                <separator string="Rx/Nueva"/>
+                                <div class="o_group">
+                                    <table class="table table-sm table-bordered" style="width: auto;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width: 60px;">OJO</th>
+                                                <th style="width: 80px;">ESFERA</th>
+                                                <th style="width: 80px;">CILINDRO</th>
+                                                <th style="width: 60px;">EJE</th>
+                                                <th style="width: 60px;">ADD</th>
+                                                <th style="width: 60px;">AV</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>OD</strong></td>
+                                                <td><field name="rx_od_esfera" nolabel="1"/></td>
+                                                <td><field name="rx_od_cilindro" nolabel="1"/></td>
+                                                <td><field name="rx_od_eje" nolabel="1"/></td>
+                                                <td><field name="rx_od_add" nolabel="1"/></td>
+                                                <td><field name="rx_od_av" nolabel="1"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>OI</strong></td>
+                                                <td><field name="rx_oi_esfera" nolabel="1"/></td>
+                                                <td><field name="rx_oi_cilindro" nolabel="1"/></td>
+                                                <td><field name="rx_oi_eje" nolabel="1"/></td>
+                                                <td><field name="rx_oi_add" nolabel="1"/></td>
+                                                <td><field name="rx_oi_av" nolabel="1"/></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Observaciones -->
+                                <separator string="OBSERVACIONES"/>
+                                <group>
+                                    <field name="rx_observaciones" nolabel="1" placeholder="Observaciones del examen..."/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
             </field>
         </record>
     </data>

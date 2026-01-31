@@ -18,14 +18,16 @@ class OpticaConsulta(models.Model):
         domain=[('is_optica_patient', '=', True)]
     )
 
-    # Datos heredados del paciente
+    # Datos heredados del paciente (solo lectura)
     partner_telefono = fields.Char(
         related='partner_id.phone',
         string='Teléfono'
     )
-    partner_edad = fields.Integer(
-        related='partner_id.edad',
-        string='Edad'
+
+    # Edad al momento de la consulta (editable, independiente)
+    edad_consulta = fields.Integer(
+        string='Edad',
+        help='Edad del paciente al momento de la consulta'
     )
 
     # Datos de la consulta
@@ -35,45 +37,85 @@ class OpticaConsulta(models.Model):
         default=fields.Date.today,
         tracking=True
     )
+    
+    fecha_formateada = fields.Char(
+        string='Fecha de Consulta',
+        compute='_compute_fecha_formateada',
+        store=True
+    )
 
     optometrista_id = fields.Many2one(
         'res.users',
         string='Optometrista',
         default=lambda self: self.env.user,
-        required=True,
         tracking=True
     )
 
     motivo_consulta = fields.Text(string='Motivo de Consulta')
 
-    # AGUDEZA VISUAL (AV)
-    av_sl_od = fields.Char(string='AV/SL OD', help='Agudeza Visual Sin Lentes - Ojo Derecho')
-    av_sl_oi = fields.Char(string='AV/SL OI', help='Agudeza Visual Sin Lentes - Ojo Izquierdo')
-    av_cl_od = fields.Char(string='AV/CL OD', help='Agudeza Visual Con Lentes - Ojo Derecho')
-    av_cl_oi = fields.Char(string='AV/CL OI', help='Agudeza Visual Con Lentes - Ojo Izquierdo')
+    @api.depends('fecha')
+    def _compute_fecha_formateada(self):
+        for record in self:
+            if record.fecha:
+                record.fecha_formateada = record.fecha.strftime('%d/%m/%Y')
+            else:
+                record.fecha_formateada = ''
 
-    # LENSOMETRÍA
-    lensometria_od = fields.Char(string='Lensometría OD')
-    lensometria_oi = fields.Char(string='Lensometría OI')
+    @api.onchange('partner_id')
+    def _onchange_partner_id(self):
+        """Al seleccionar paciente, auto-completar edad"""
+        if self.partner_id and self.partner_id.edad:
+            self.edad_consulta = self.partner_id.edad
 
-    # RETINOSCOPÍA
-    ret_od_esfera = fields.Char(string='Ret. Esfera OD')
-    ret_od_cilindro = fields.Char(string='Ret. Cilindro OD')
-    ret_od_eje = fields.Char(string='Ret. Eje OD')
-    ret_oi_esfera = fields.Char(string='Ret. Esfera OI')
-    ret_oi_cilindro = fields.Char(string='Ret. Cilindro OI')
-    ret_oi_eje = fields.Char(string='Ret. Eje OI')
+    # ==================== AGUDEZA VISUAL (AV) ====================
+    # Sin Lentes (SL)
+    av_sl_od = fields.Char(string='AV/SL OD')
+    av_sl_oi = fields.Char(string='AV/SL OI')
+    # Con Lentes (CL)
+    av_cl_od = fields.Char(string='AV/CL OD')
+    av_cl_oi = fields.Char(string='AV/CL OI')
 
-    # RX NUEVA (Graduación Final)
-    rx_od_esfera = fields.Char(string='RX Esfera OD')
-    rx_od_cilindro = fields.Char(string='RX Cilindro OD')
-    rx_od_eje = fields.Char(string='RX Eje OD')
-    rx_od_add = fields.Char(string='RX ADD OD')
-    rx_oi_esfera = fields.Char(string='RX Esfera OI')
-    rx_oi_cilindro = fields.Char(string='RX Cilindro OI')
-    rx_oi_eje = fields.Char(string='RX Eje OI')
-    rx_oi_add = fields.Char(string='RX ADD OI')
+    # ==================== LENSOMETRÍA ====================
+    # Ojo Derecho
+    lens_od_esfera = fields.Char(string='Esfera')
+    lens_od_cilindro = fields.Char(string='Cilindro')
+    lens_od_eje = fields.Char(string='Eje')
+    lens_od_add = fields.Char(string='ADD')
+    # Ojo Izquierdo
+    lens_oi_esfera = fields.Char(string='Esfera')
+    lens_oi_cilindro = fields.Char(string='Cilindro')
+    lens_oi_eje = fields.Char(string='Eje')
+    lens_oi_add = fields.Char(string='ADD')
 
+    # ==================== RETINOSCOPÍA ====================
+    # Ojo Derecho
+    ret_od_esfera = fields.Char(string='Esfera')
+    ret_od_cilindro = fields.Char(string='Cilindro')
+    ret_od_eje = fields.Char(string='Eje')
+    ret_od_av = fields.Char(string='AV')
+    # Ojo Izquierdo
+    ret_oi_esfera = fields.Char(string='Esfera')
+    ret_oi_cilindro = fields.Char(string='Cilindro')
+    ret_oi_eje = fields.Char(string='Eje')
+    ret_oi_av = fields.Char(string='AV')
+
+    # ==================== RX NUEVA (Graduación Final) ====================
+    # Ojo Derecho
+    rx_od_esfera = fields.Char(string='Esfera')
+    rx_od_cilindro = fields.Char(string='Cilindro')
+    rx_od_eje = fields.Char(string='Eje')
+    rx_od_add = fields.Char(string='ADD')
+    rx_od_av = fields.Char(string='AV')
+    # Ojo Izquierdo
+    rx_oi_esfera = fields.Char(string='Esfera')
+    rx_oi_cilindro = fields.Char(string='Cilindro')
+    rx_oi_eje = fields.Char(string='Eje')
+    rx_oi_add = fields.Char(string='ADD')
+    rx_oi_av = fields.Char(string='AV')
+
+    # ==================== OBSERVACIONES RX ====================
+    rx_observaciones = fields.Text(string='RX')
+    
     # DIP
     dip_od = fields.Float(string='DIP OD', digits=(4, 2))
     dip_oi = fields.Float(string='DIP OI', digits=(4, 2))
@@ -87,7 +129,7 @@ class OpticaConsulta(models.Model):
     anexos_oculares = fields.Text(string='Anexos Oculares')
     fondo_ojo = fields.Text(string='Fondo de Ojo')
     diagnostico = fields.Text(string='Diagnóstico')
-    observaciones = fields.Text(string='Observaciones')
+    observaciones = fields.Text(string='Observaciones Generales')
     recomendaciones = fields.Text(string='Recomendaciones')
 
     # PRODUCTO/VENTA
@@ -167,3 +209,9 @@ class OpticaConsulta(models.Model):
             'target': 'new',
             'context': {'default_consulta_id': self.id}
         }
+
+    def action_eliminar_consulta(self):
+        """Eliminar consulta con confirmación"""
+        self.ensure_one()
+        self.unlink()
+        return True

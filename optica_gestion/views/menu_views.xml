@@ -14,11 +14,17 @@
             action="action_pacientes_optica"
             sequence="10"/>
 
-        <!-- Registrar Consulta -->
+        <!-- Consultas (para importación) -->
+        <record id="action_consultas_optica" model="ir.actions.act_window">
+            <field name="name">Consultas</field>
+            <field name="res_model">optica.consulta</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
         <menuitem id="menu_optica_consultas"
-            name="Registrar Consulta"
+            name="Consultas"
             parent="menu_optica_root"
-            action="action_consulta"
+            action="action_consultas_optica"
             sequence="20"/>
 
         <!-- Citas -->

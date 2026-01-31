@@ -8,11 +8,12 @@
             <field name="arch" type="xml">
                 <form string="Cita">
                     <header>
+                        <button name="action_guardar_borrador" string="Guardar Borrador" type="object" class="oe_highlight" invisible="state != 'borrador'"/>
                         <button name="action_confirmar" string="Confirmar" type="object" class="oe_highlight" invisible="state != 'borrador'"/>
                         <button name="action_completar" string="Completar" type="object" class="oe_highlight" invisible="state != 'confirmada'"/>
                         <button name="action_crear_consulta" string="Crear Consulta" type="object" class="btn-primary" invisible="state != 'confirmada'"/>
                         <button name="action_no_asistio" string="No Asistió" type="object" class="btn-warning" invisible="state != 'confirmada'"/>
-                        <button name="action_cancelar" string="Cancelar" type="object" class="btn-danger" invisible="state in ('completada', 'cancelada', 'no_asistio')"/>
+                        <button name="action_cancelar" string="Cancelar Cita" type="object" class="btn-danger" invisible="state in ('completada', 'cancelada', 'no_asistio') or not id" confirm="¿Está seguro que desea cancelar esta cita?"/>
                         <button name="action_reabrir" string="Reabrir" type="object" invisible="state not in ('cancelada', 'no_asistio')"/>
                         <field name="state" widget="statusbar" statusbar_visible="borrador,confirmada,completada"/>
                     </header>
@@ -22,11 +23,12 @@
                                 <field name="partner_id" domain="[('is_optica_patient', '=', True)]"/>
                                 <field name="fecha"/>
                                 <field name="hora_inicio" widget="float_time"/>
-                                <field name="duracion"/>
                                 <field name="hora_fin" widget="float_time"/>
+                                <field name="duracion" readonly="1"/>
+                                <field name="cantidad_personas"/>
                             </group>
                             <group string="Asignación">
-                                <field name="optometrista_id"/>
+                                <field name="optometrista_id" string="Asignado a"/>
                             </group>
                         </group>
                         <group string="Detalles">
@@ -48,7 +50,8 @@
                     <field name="fecha"/>
                     <field name="hora_inicio" widget="float_time"/>
                     <field name="partner_id"/>
-                    <field name="optometrista_id"/>
+                    <field name="cantidad_personas" string="Personas"/>
+                    <field name="optometrista_id" string="Asignado a"/>
                     <field name="motivo"/>
                     <field name="state" widget="badge"/>
                 </list>

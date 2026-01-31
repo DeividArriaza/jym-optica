@@ -14,15 +14,8 @@
             <field name="name">res.partner.form.optica</field>
             <field name="model">res.partner</field>
             <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="priority">5</field>
             <field name="arch" type="xml">
-                <!-- Agregar botones de óptica en el header -->
-                <xpath expr="//form/sheet" position="before">
-                    <header invisible="not is_optica_patient">
-                        <button name="action_nueva_cita_optica" string="Nueva Cita" type="object" class="oe_highlight"/>
-                        <button name="action_nueva_consulta" string="Registrar Consulta" type="object" class="oe_highlight"/>
-                    </header>
-                </xpath>
-
                 <!-- Agregar botones de estadísticas -->
                 <xpath expr="//div[@name='button_box']" position="inside">
                     <button name="action_ver_consultas" type="object" class="oe_stat_button" icon="fa-stethoscope" invisible="not is_optica_patient">
@@ -35,108 +28,175 @@
 
                 <!-- Agregar checkbox de paciente y ficha después del nombre -->
                 <xpath expr="//field[@name='company_type']" position="after">
-                    <field name="is_optica_patient"/>
+                    <div class="d-flex align-items-center gap-1">
+                        <field name="is_optica_patient"/>
+                        <span>Paciente</span>
+                    </div>
                     <field name="ficha_numero" readonly="1" invisible="not is_optica_patient"/>
                 </xpath>
 
-                <!-- Agregar campos adicionales de paciente -->
-                <xpath expr="//field[@name='phone']" position="after">
-                    <field name="fecha_nacimiento" invisible="not is_optica_patient"/>
-                    <field name="edad" invisible="not is_optica_patient"/>
-                    <field name="ocupacion" invisible="not is_optica_patient"/>
-                    <field name="referencia" invisible="not is_optica_patient" placeholder="¿Cómo se enteró de nosotros?"/>
+                <!-- ========== OCULTAR CAMPOS PARA PACIENTES ========== -->
+                
+                <!-- Ocultar Company -->
+                <xpath expr="//field[@name='parent_id']" position="attributes">
+                    <attribute name="invisible">is_optica_patient</attribute>
                 </xpath>
 
-                <!-- Agregar notebook de óptica -->
-                <xpath expr="//notebook" position="inside">
-                    <!-- Pestaña de Historial de Consultas -->
-                    <page string="Historial de Consultas" name="historial_consultas" invisible="not is_optica_patient">
-                        <field name="consulta_ids" readonly="1">
-                            <list string="Historial de Exámenes" default_order="fecha desc">
-                                <field name="fecha" string="Fecha"/>
-                                <field name="optometrista_id" string="Optometrista"/>
-                                <field name="av_sl_od" string="AV/SL OD"/>
-                                <field name="av_sl_oi" string="AV/SL OI"/>
-                                <field name="rx_od_esfera" string="RX OD Esf"/>
-                                <field name="rx_od_cilindro" string="RX OD Cil"/>
-                                <field name="rx_oi_esfera" string="RX OI Esf"/>
-                                <field name="rx_oi_cilindro" string="RX OI Cil"/>
-                                <field name="tipo_lente" string="Tipo Lente"/>
-                                <field name="diagnostico" string="Diagnóstico"/>
-                            </list>
-                        </field>
-                    </page>
+                <!-- Ocultar el contenedor de Address -->
+                <xpath expr="//span[@name='address_name']" position="attributes">
+                    <attribute name="invisible">is_optica_patient</attribute>
+                </xpath>
 
-                    <!-- Pestaña de Ficha de Examen -->
-                    <page string="Ficha de Examen" name="ficha_examen" invisible="not is_optica_patient">
-                        <group string="Historial del Paciente">
-                            <group>
-                                <field name="evaluacion_visual_previa" widget="radio" options="{'horizontal': true}"/>
-                                <field name="fecha_ultima_evaluacion" invisible="evaluacion_visual_previa != 'si'"/>
-                                <field name="padece_enfermedad" widget="radio" options="{'horizontal': true}"/>
-                                <field name="enfermedades" invisible="padece_enfermedad != 'si'" placeholder="Especificar enfermedades..."/>
-                                <field name="usa_computadora" widget="radio" options="{'horizontal': true}"/>
-                            </group>
-                            <group>
-                                <field name="antecedentes_familiares" widget="radio" options="{'horizontal': true}"/>
-                                <field name="antecedentes_familiares_detalle" invisible="antecedentes_familiares != 'si'" placeholder="Glaucoma, cataratas, etc..."/>
-                                <field name="usa_lentes" widget="radio"/>
-                                <field name="tipo_lentes_previos" invisible="usa_lentes == 'no'" placeholder="Tipo de lentes usados..."/>
-                            </group>
+                <!-- Ocultar el div de address format -->
+                <xpath expr="//div[hasclass('o_address_format')]" position="attributes">
+                    <attribute name="invisible">is_optica_patient</attribute>
+                </xpath>
+
+                <!-- Ocultar Job Position -->
+                <xpath expr="//field[@name='function']" position="attributes">
+                    <attribute name="invisible">is_optica_patient</attribute>
+                </xpath>
+
+                <!-- Ocultar Tax ID -->
+                <xpath expr="//field[@name='vat']" position="attributes">
+                    <attribute name="invisible">is_optica_patient</attribute>
+                </xpath>
+
+                <!-- Ocultar Website -->
+                <xpath expr="//field[@name='website']" position="attributes">
+                    <attribute name="invisible">is_optica_patient</attribute>
+                </xpath>
+
+                <!-- Ocultar Tags -->
+                <xpath expr="//field[@name='category_id']" position="attributes">
+                    <attribute name="invisible">is_optica_patient</attribute>
+                </xpath>
+
+                <!-- Ocultar Idioma -->
+                <xpath expr="//field[@name='lang']" position="attributes">
+                    <attribute name="invisible">is_optica_patient</attribute>
+                </xpath>
+
+                <!-- ========== AGREGAR CAMPOS DE PACIENTE EN COLUMNA IZQUIERDA ========== -->
+                <xpath expr="//div[hasclass('o_address_format')]" position="after">
+                    <field name="direccion_paciente" invisible="not is_optica_patient" string="Dirección"/>
+                    <field name="fecha" invisible="not is_optica_patient" string="Fecha Registro"/>
+                    <field name="edad" invisible="not is_optica_patient"/>
+                </xpath>
+
+                <!-- ========== AGREGAR CAMPOS DE PACIENTE EN COLUMNA DERECHA ========== -->
+                <xpath expr="//field[@name='category_id']" position="after">
+                    <field name="blacklisted" invisible="not is_optica_patient" string="Lista Negra"/>
+                    <field name="blacklist_motivo" invisible="not blacklisted" string="Motivo" placeholder="Motivo de lista negra..."/>
+                    <field name="ocupacion" invisible="not is_optica_patient"/>
+                    <field name="referencia" invisible="not is_optica_patient"/>
+                </xpath>
+
+                <!-- ========== FICHA MÉDICA Y OBSERVACIONES ========== -->
+                <xpath expr="//sheet/group[1]" position="after">
+                    <!-- FICHA MÉDICA -->
+                    <group string="Ficha Médica" invisible="not is_optica_patient">
+                        <group>
+                            <field name="ev_visual" string="Evaluación visual previa"/>
+                            <field name="ob_ev_visual" placeholder="Observaciones..." invisible="not ev_visual"/>
+                            
+                            <field name="enfermedad" string="Padece alguna enfermedad"/>
+                            <field name="ob_enfermedad" placeholder="¿Cuál?..." invisible="not enfermedad"/>
+                            
+                            <field name="computadora" string="Usa computadora"/>
+                            <field name="ob_computadora" placeholder="¿Cuántas horas?..." invisible="not computadora"/>
+                            
+                            <field name="lentes" string="Ha usado lentes"/>
+                            <field name="ob_lentes" placeholder="¿Qué tipo?..." invisible="not lentes"/>
+                            
+                            <field name="antecedentes" string="Antecedentes familiares"/>
+                            <field name="ob_antecedentes" placeholder="¿Cuáles?..." invisible="not antecedentes"/>
                         </group>
-                        
-                        <group string="Condiciones Médicas">
-                            <group>
-                                <field name="embarazo" widget="radio" options="{'horizontal': true}"/>
-                                <field name="diabetes"/>
-                            </group>
-                            <group>
-                                <field name="presion_arterial"/>
-                                <field name="cirugia_previa"/>
-                            </group>
-                        </group>
-                        
                         <group string="Síntomas">
-                            <group>
-                                <field name="sintoma_cefalea"/>
-                                <field name="sintoma_ardor"/>
-                                <field name="sintoma_dolor"/>
-                                <field name="sintoma_ojo_rojo"/>
-                                <field name="sintoma_fotofobia"/>
-                                <field name="sintoma_glaucoma"/>
-                            </group>
-                            <group>
-                                <field name="sintoma_vision_borrosa"/>
-                                <field name="sintoma_secreciones"/>
-                                <field name="sintoma_cansancio"/>
-                                <field name="sintoma_moscas_volantes"/>
-                                <field name="sintoma_otros"/>
-                                <field name="sintoma_otros_descripcion" invisible="not sintoma_otros"/>
-                            </group>
+                            <field name="cefalea"/>
+                            <field name="vision_borrosa"/>
+                            <field name="dolor"/>
+                            <field name="ojo_rojo"/>
+                            <field name="fotofobia"/>
+                            <field name="glaucoma"/>
+                            <field name="diabetes"/>
+                            <field name="secreciones"/>
+                            <field name="cansancio"/>
+                            <field name="volantes"/>
+                            <field name="ardor"/>
+                            <field name="embarazo"/>
+                            <field name="presion"/>
+                            <field name="cx"/>
+                            <field name="otros"/>
                         </group>
-                        
-                        <group string="Información Adicional">
-                            <group>
-                                <field name="alergias" placeholder="Alergias conocidas..."/>
-                            </group>
-                            <group>
-                                <field name="notas_medicas" placeholder="Notas médicas adicionales..."/>
-                            </group>
-                        </group>
-                    </page>
+                    </group>
 
-                    <!-- Pestaña de Citas de Óptica -->
-                    <page string="Citas Óptica" name="citas_optica" invisible="not is_optica_patient">
-                        <field name="cita_optica_ids" readonly="1">
-                            <list>
-                                <field name="fecha"/>
-                                <field name="hora_inicio" widget="float_time"/>
-                                <field name="optometrista_id"/>
-                                <field name="motivo"/>
-                                <field name="state" widget="badge"/>
-                            </list>
-                        </field>
-                    </page>
+                    <!-- OBSERVACIONES CLÍNICAS -->
+                    <group string="Observaciones Clínicas" invisible="not is_optica_patient">
+                        <group>
+                            <field name="anexos_oculares" placeholder="NL, sin patologías aparentes..."/>
+                        </group>
+                        <group>
+                            <field name="fondo_ojo" placeholder="NL, sin patologías aparentes..."/>
+                        </group>
+                        <group colspan="2">
+                            <field name="observaciones" placeholder="Observaciones generales..."/>
+                        </group>
+                    </group>
+
+                    <!-- HISTORIAL DE CONSULTAS -->
+                    <separator string="CONSULTAS" invisible="not is_optica_patient"/>
+                    <field name="consulta_ids" nolabel="1" invisible="not is_optica_patient" context="{'default_partner_id': id}">
+                        <list string="Consultas" editable="bottom" delete="false">
+                            <control>
+                                <create string="Agregar una consulta"/>
+                            </control>
+                            <field name="fecha_formateada" string="Fecha de Consulta"/>
+                            <field name="optometrista_id" string="Realizado por"/>
+                            <field name="rx_observaciones" string="Comentarios"/>
+                            <button name="action_eliminar_consulta" type="object" icon="fa-trash" title="Eliminar consulta" confirm="¿Está seguro que desea eliminar esta consulta? Esta acción no se puede deshacer."/>
+                        </list>
+                    </field>
+                </xpath>
+
+                <!-- ========== OCULTAR PESTAÑAS PARA PACIENTES ========== -->
+                
+                <!-- Ocultar pestaña Contacts -->
+                <xpath expr="//page[@name='contact_addresses']" position="attributes">
+                    <attribute name="invisible">is_optica_patient</attribute>
+                </xpath>
+
+                <!-- Ocultar pestaña Sales & Purchase (con 's' al final) -->
+                <xpath expr="//page[@name='sales_purchases']" position="attributes">
+                    <attribute name="invisible">is_optica_patient</attribute>
+                </xpath>
+
+                <!-- Ocultar pestaña Notes -->
+                <xpath expr="//page[@name='internal_notes']" position="attributes">
+                    <attribute name="invisible">is_optica_patient</attribute>
+                </xpath>
+
+                <!-- Ocultar pestaña Invoicing (accounting) -->
+                <xpath expr="//page[@name='accounting']" position="attributes">
+                    <attribute name="invisible">is_optica_patient</attribute>
+                </xpath>
+
+                <!-- Ocultar pestaña Invoicing disabled -->
+                <xpath expr="//page[@name='accounting_disabled']" position="attributes">
+                    <attribute name="invisible">is_optica_patient</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Ocultar chatter para pacientes - hereda de la vista de mail -->
+        <record id="view_partner_form_optica_hide_chatter" model="ir.ui.view">
+            <field name="name">res.partner.form.optica.hide.chatter</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="mail.res_partner_view_form_inherit_mail"/>
+            <field name="priority">100</field>
+            <field name="arch" type="xml">
+                <xpath expr="//chatter" position="attributes">
+                    <attribute name="invisible">is_optica_patient</attribute>
                 </xpath>
             </field>
         </record>
@@ -146,30 +206,32 @@
             <field name="name">res.partner.list.optica</field>
             <field name="model">res.partner</field>
             <field name="arch" type="xml">
-                <list string="Pacientes de Óptica">
+                <list string="Pacientes de Óptica" decoration-danger="blacklisted">
                     <field name="ficha_numero"/>
                     <field name="name"/>
                     <field name="edad"/>
                     <field name="phone"/>
-                    <field name="ocupacion" optional="hide"/>
+                    <field name="ocupacion" optional="show"/>
                     <field name="ultima_consulta_fecha" string="Última Consulta"/>
                     <field name="consulta_count" string="Consultas"/>
+                    <field name="blacklisted" string="Lista Negra" optional="hide"/>
                 </list>
             </field>
         </record>
 
-        <!-- Vista de búsqueda de pacientes de óptica -->
+        <!-- Vista de búsqueda de pacientes de óptica con búsqueda combinada -->
         <record id="view_partner_search_optica" model="ir.ui.view">
             <field name="name">res.partner.search.optica</field>
             <field name="model">res.partner</field>
             <field name="arch" type="xml">
                 <search string="Buscar Paciente">
-                    <field name="name"/>
+                    <field name="name" filter_domain="['|', '|', ('name', 'ilike', self), ('phone', 'ilike', self), ('ficha_numero', 'ilike', self)]"/>
                     <field name="ficha_numero"/>
                     <field name="phone"/>
                     <separator/>
-                    <filter string="Usa Lentes" name="usa_lentes" domain="[('usa_lentes', '!=', 'no')]"/>
+                    <filter string="Usa Lentes" name="usa_lentes" domain="[('lentes', '=', True)]"/>
                     <filter string="Con Diabetes" name="diabetes" domain="[('diabetes', '=', True)]"/>
+                    <filter string="Lista Negra" name="lista_negra" domain="[('blacklisted', '=', True)]"/>
                 </search>
             </field>
         </record>

@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_optica_paciente_user,optica.paciente.user,model_optica_paciente,base.group_user,1,1,1,0
+access_optica_paciente_manager,optica.paciente.manager,model_optica_paciente,base.group_system,1,1,1,1
+access_optica_consulta_user,optica.consulta.user,model_optica_consulta,base.group_user,1,1,1,0
+access_optica_consulta_manager,optica.consulta.manager,model_optica_consulta,base.group_system,1,1,1,1
+access_optica_cita_user,optica.cita.user,model_optica_cita,base.group_user,1,1,1,0
+access_optica_cita_manager,optica.cita.manager,model_optica_cita,base.group_system,1,1,1,1
+access_optica_dibujo_clinico_user,optica.dibujo.clinico.user,model_optica_dibujo_clinico,base.group_user,1,1,1,0
+access_optica_dibujo_clinico_manager,optica.dibujo.clinico.manager,model_optica_dibujo_clinico,base.group_system,1,1,1,1
+access_optica_lista_negra_wizard_user,optica.lista.negra.wizard.user,model_optica_lista_negra_wizard,base.group_user,1,1,1,1

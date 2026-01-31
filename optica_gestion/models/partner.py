@@ -1,5 +1,4 @@
 from odoo import models, fields, api
-from dateutil.relativedelta import relativedelta
 
 
 class ResPartner(models.Model):
@@ -11,6 +10,17 @@ class ResPartner(models.Model):
         default=False
     )
 
+    # Lista negra para óptica (bloquea citas)
+    blacklisted = fields.Boolean(
+        string='Lista Negra',
+        default=False,
+        help='Pacientes en lista negra no pueden agendar citas'
+    )
+    blacklist_motivo = fields.Text(
+        string='Motivo',
+        help='Motivo por el cual está en lista negra'
+    )
+
     # Número de ficha
     ficha_numero = fields.Char(
         string='Ficha No.',
@@ -18,14 +28,20 @@ class ResPartner(models.Model):
         copy=False
     )
 
-    # Datos adicionales del paciente
-    fecha_nacimiento = fields.Date(
-        string='Fecha de Nacimiento'
+    # Dirección simple para pacientes (en lugar de street/city/zip separados)
+    direccion_paciente = fields.Char(
+        string='Dirección',
+        help='Dirección del paciente'
+    )
+
+    # Datos adicionales del paciente (nombres coinciden con Excel)
+    fecha = fields.Date(
+        string='Fecha',
+        default=fields.Date.today,
+        help='Fecha de registro del paciente'
     )
     edad = fields.Integer(
-        string='Edad',
-        compute='_compute_edad',
-        store=True
+        string='Edad'
     )
     ocupacion = fields.Char(
         string='Ocupación'
@@ -35,80 +51,63 @@ class ResPartner(models.Model):
         help='¿Cómo se enteró de nosotros?'
     )
 
-    # Preguntas de la ficha
-    evaluacion_visual_previa = fields.Selection([
-        ('si', 'Sí'),
-        ('no', 'No')
-    ], string='¿Evaluación Visual Previa?', default='no')
-
-    fecha_ultima_evaluacion = fields.Date(
-        string='Fecha Última Evaluación'
+    # Preguntas de la ficha (Boolean para coincidir con Excel 0/1)
+    ev_visual = fields.Boolean(
+        string='Se ha realizado alguna evaluación visual'
+    )
+    ob_ev_visual = fields.Text(
+        string='Observaciones Evaluación Visual'
     )
 
-    padece_enfermedad = fields.Selection([
-        ('si', 'Sí'),
-        ('no', 'No')
-    ], string='¿Padece Alguna Enfermedad?', default='no')
-
-    enfermedades = fields.Text(
-        string='Enfermedades',
-        help='Especificar enfermedades'
+    enfermedad = fields.Boolean(
+        string='Padece de alguna enfermedad'
+    )
+    ob_enfermedad = fields.Text(
+        string='Observaciones Enfermedad'
     )
 
-    usa_computadora = fields.Selection([
-        ('si', 'Sí'),
-        ('no', 'No')
-    ], string='¿Usa Computadora?', default='no')
-
-    antecedentes_familiares = fields.Selection([
-        ('si', 'Sí'),
-        ('no', 'No')
-    ], string='¿Antecedentes Familiares?', default='no')
-
-    antecedentes_familiares_detalle = fields.Text(
-        string='Detalle Antecedentes Familiares',
-        help='Glaucoma, cataratas, degeneración macular, etc.'
+    computadora = fields.Boolean(
+        string='Usa computadora'
+    )
+    ob_computadora = fields.Text(
+        string='Observaciones Computadora'
     )
 
-    usa_lentes = fields.Selection([
-        ('si', 'Sí'),
-        ('no', 'No'),
-        ('anteriormente', 'Anteriormente')
-    ], string='¿Ha Usado Lentes?', default='no')
-
-    tipo_lentes_previos = fields.Char(
-        string='Tipo de Lentes Previos',
-        help='Si ha usado lentes, especificar qué tipo'
+    lentes = fields.Boolean(
+        string='Ha usado lentes'
+    )
+    ob_lentes = fields.Text(
+        string='Observaciones Lentes'
     )
 
-    # Condiciones médicas específicas
-    embarazo = fields.Selection([
-        ('si', 'Sí'),
-        ('no', 'No'),
-        ('na', 'N/A')
-    ], string='¿Embarazo?', default='na')
+    antecedentes = fields.Boolean(
+        string='Antecedentes familiares'
+    )
+    ob_antecedentes = fields.Text(
+        string='Observaciones Antecedentes'
+    )
 
+    # SÍNTOMAS (nombres exactos del Excel)
+    cefalea = fields.Boolean(string='Cefalea')
+    vision_borrosa = fields.Boolean(string='Visión Borrosa')
+    dolor = fields.Boolean(string='Dolor')
+    ojo_rojo = fields.Boolean(string='Ojo Rojo')
+    fotofobia = fields.Boolean(string='Fotofobia')
+    glaucoma = fields.Boolean(string='Glaucoma')
     diabetes = fields.Boolean(string='Diabetes')
-    presion_arterial = fields.Boolean(string='Presión Arterial')
-    cirugia_previa = fields.Boolean(string='Cirugía Ocular Previa (CX)')
+    secreciones = fields.Boolean(string='Secreciones')
+    cansancio = fields.Boolean(string='Cansancio')
+    volantes = fields.Boolean(string='M. Volantes')
+    ardor = fields.Boolean(string='Ardor')
+    embarazo = fields.Boolean(string='Embarazo')
+    presion = fields.Boolean(string='Presión')
+    cx = fields.Boolean(string='CX')
+    otros = fields.Boolean(string='Otros')
 
-    # SÍNTOMAS
-    sintoma_cefalea = fields.Boolean(string='Cefalea')
-    sintoma_ardor = fields.Boolean(string='Ardor')
-    sintoma_dolor = fields.Boolean(string='Dolor')
-    sintoma_ojo_rojo = fields.Boolean(string='Ojo Rojo')
-    sintoma_fotofobia = fields.Boolean(string='Fotofobia')
-    sintoma_glaucoma = fields.Boolean(string='Glaucoma')
-    sintoma_vision_borrosa = fields.Boolean(string='Visión Borrosa')
-    sintoma_secreciones = fields.Boolean(string='Secreciones')
-    sintoma_cansancio = fields.Boolean(string='Cansancio')
-    sintoma_moscas_volantes = fields.Boolean(string='Moscas Volantes')
-    sintoma_otros = fields.Boolean(string='Otros Síntomas')
-    sintoma_otros_descripcion = fields.Char(string='Especificar Otros Síntomas')
-
-    # Observaciones generales
-    alergias = fields.Text(string='Alergias')
-    notas_medicas = fields.Text(string='Notas Médicas Adicionales')
+    # Observaciones clínicas generales (del Excel)
+    anexos_oculares = fields.Text(string='Anexos Oculares')
+    fondo_ojo = fields.Text(string='Fondo de Ojo')
+    observaciones = fields.Text(string='Observaciones')
 
     # Relaciones con consultas y citas
     consulta_ids = fields.One2many(
@@ -125,18 +124,21 @@ class ResPartner(models.Model):
     # Contadores
     consulta_count = fields.Integer(
         string='Número de Consultas',
-        compute='_compute_consulta_count'
+        compute='_compute_consulta_count',
+        store=True
     )
     cita_optica_count = fields.Integer(
         string='Número de Citas',
-        compute='_compute_cita_optica_count'
+        compute='_compute_cita_optica_count',
+        store=True
     )
 
     # Última consulta
     ultima_consulta_id = fields.Many2one(
         'optica.consulta',
         string='Última Consulta',
-        compute='_compute_ultima_consulta'
+        compute='_compute_ultima_consulta',
+        store=True
     )
     ultima_consulta_fecha = fields.Date(
         related='ultima_consulta_id.fecha',
@@ -156,15 +158,6 @@ class ResPartner(models.Model):
                 if not record.ficha_numero:
                     vals['ficha_numero'] = self.env['ir.sequence'].next_by_code('optica.paciente.ficha') or 'Nuevo'
         return super().write(vals)
-
-    @api.depends('fecha_nacimiento')
-    def _compute_edad(self):
-        today = fields.Date.today()
-        for record in self:
-            if record.fecha_nacimiento:
-                record.edad = relativedelta(today, record.fecha_nacimiento).years
-            else:
-                record.edad = 0
 
     @api.depends('consulta_ids')
     def _compute_consulta_count(self):
