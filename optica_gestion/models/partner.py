@@ -10,11 +10,11 @@ class ResPartner(models.Model):
         default=False
     )
 
-    # Lista negra para óptica (bloquea citas)
+    # Lista negra para óptica
     blacklisted = fields.Boolean(
         string='Lista Negra',
         default=False,
-        help='Pacientes en lista negra no pueden agendar citas'
+        help='Marcar pacientes problemáticos'
     )
     blacklist_motivo = fields.Text(
         string='Motivo',
@@ -109,27 +109,17 @@ class ResPartner(models.Model):
     fondo_ojo = fields.Text(string='Fondo de Ojo')
     observaciones = fields.Text(string='Observaciones')
 
-    # Relaciones con consultas y citas
+    # Relaciones con consultas
     consulta_ids = fields.One2many(
         'optica.consulta',
         'partner_id',
         string='Consultas'
-    )
-    cita_optica_ids = fields.One2many(
-        'optica.cita',
-        'partner_id',
-        string='Citas de Óptica'
     )
 
     # Contadores
     consulta_count = fields.Integer(
         string='Número de Consultas',
         compute='_compute_consulta_count',
-        store=True
-    )
-    cita_optica_count = fields.Integer(
-        string='Número de Citas',
-        compute='_compute_cita_optica_count',
         store=True
     )
 
@@ -164,11 +154,6 @@ class ResPartner(models.Model):
         for record in self:
             record.consulta_count = len(record.consulta_ids)
 
-    @api.depends('cita_optica_ids')
-    def _compute_cita_optica_count(self):
-        for record in self:
-            record.cita_optica_count = len(record.cita_optica_ids)
-
     @api.depends('consulta_ids', 'consulta_ids.fecha')
     def _compute_ultima_consulta(self):
         for record in self:
@@ -185,28 +170,6 @@ class ResPartner(models.Model):
             'res_model': 'optica.consulta',
             'view_mode': 'list,form',
             'domain': [('partner_id', '=', self.id)],
-            'context': {'default_partner_id': self.id}
-        }
-
-    def action_ver_citas_optica(self):
-        self.ensure_one()
-        return {
-            'type': 'ir.actions.act_window',
-            'name': 'Citas de %s' % self.name,
-            'res_model': 'optica.cita',
-            'view_mode': 'list,calendar,form',
-            'domain': [('partner_id', '=', self.id)],
-            'context': {'default_partner_id': self.id}
-        }
-
-    def action_nueva_cita_optica(self):
-        self.ensure_one()
-        return {
-            'type': 'ir.actions.act_window',
-            'name': 'Nueva Cita',
-            'res_model': 'optica.cita',
-            'view_mode': 'form',
-            'target': 'new',
             'context': {'default_partner_id': self.id}
         }
 

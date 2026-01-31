@@ -1,6 +1,7 @@
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
-from datetime import timedelta
+from datetime import datetime, timedelta
+import pytz
 
 
 class OpticaCita(models.Model):
@@ -9,13 +10,21 @@ class OpticaCita(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'fecha desc, hora_inicio'
 
-    partner_id = fields.Many2one(
-        'res.partner',
-        string='Paciente',
+    # Datos de contacto (solo texto, no vinculado a paciente)
+    nombre = fields.Char(
+        string='Nombre',
         required=True,
-        ondelete='cascade',
-        tracking=True,
-        domain=[('is_optica_patient', '=', True)]
+        tracking=True
+    )
+    
+    telefono = fields.Char(
+        string='Teléfono',
+        tracking=True
+    )
+    
+    correo = fields.Char(
+        string='Correo',
+        tracking=True
     )
     
     fecha = fields.Date(
@@ -25,16 +34,49 @@ class OpticaCita(models.Model):
         tracking=True
     )
     
-    hora_inicio = fields.Float(
+    # Opciones de horario cada 15 minutos (7:00 - 20:00)
+    HORARIOS = [
+        ('7.0', '07:00'), ('7.25', '07:15'), ('7.5', '07:30'), ('7.75', '07:45'),
+        ('8.0', '08:00'), ('8.25', '08:15'), ('8.5', '08:30'), ('8.75', '08:45'),
+        ('9.0', '09:00'), ('9.25', '09:15'), ('9.5', '09:30'), ('9.75', '09:45'),
+        ('10.0', '10:00'), ('10.25', '10:15'), ('10.5', '10:30'), ('10.75', '10:45'),
+        ('11.0', '11:00'), ('11.25', '11:15'), ('11.5', '11:30'), ('11.75', '11:45'),
+        ('12.0', '12:00'), ('12.25', '12:15'), ('12.5', '12:30'), ('12.75', '12:45'),
+        ('13.0', '13:00'), ('13.25', '13:15'), ('13.5', '13:30'), ('13.75', '13:45'),
+        ('14.0', '14:00'), ('14.25', '14:15'), ('14.5', '14:30'), ('14.75', '14:45'),
+        ('15.0', '15:00'), ('15.25', '15:15'), ('15.5', '15:30'), ('15.75', '15:45'),
+        ('16.0', '16:00'), ('16.25', '16:15'), ('16.5', '16:30'), ('16.75', '16:45'),
+        ('17.0', '17:00'), ('17.25', '17:15'), ('17.5', '17:30'), ('17.75', '17:45'),
+        ('18.0', '18:00'), ('18.25', '18:15'), ('18.5', '18:30'), ('18.75', '18:45'),
+        ('19.0', '19:00'), ('19.25', '19:15'), ('19.5', '19:30'), ('19.75', '19:45'),
+        ('20.0', '20:00'),
+    ]
+
+    hora_inicio = fields.Selection(
+        selection=HORARIOS,
         string='Hora de Inicio',
         required=True,
-        default=9.0
+        default='9.0'
     )
     
-    hora_fin = fields.Float(
+    hora_fin = fields.Selection(
+        selection=HORARIOS,
         string='Hora de Fin',
         required=True,
-        default=9.5
+        default='9.5'
+    )
+    
+    # Campos Datetime computados para el calendario
+    datetime_inicio = fields.Datetime(
+        string='Inicio',
+        compute='_compute_datetime',
+        store=True
+    )
+    
+    datetime_fin = fields.Datetime(
+        string='Fin',
+        compute='_compute_datetime',
+        store=True
     )
     
     duracion = fields.Char(
@@ -46,7 +88,7 @@ class OpticaCita(models.Model):
     cantidad_personas = fields.Integer(
         string='Cantidad de Personas',
         default=1,
-        help='Número de personas que asistirán a la cita'
+        help='Número de personas que vendrán a la cita'
     )
     
     optometrista_id = fields.Many2one(
@@ -55,8 +97,6 @@ class OpticaCita(models.Model):
         default=lambda self: self.env.user,
         tracking=True
     )
-    
-    motivo = fields.Text(string='Motivo de la Cita')
     
     state = fields.Selection([
         ('borrador', 'Borrador'),
@@ -75,38 +115,58 @@ class OpticaCita(models.Model):
         ondelete='set null'
     )
 
-    @api.onchange('partner_id')
-    def _onchange_partner_id_blacklist(self):
-        """Advertir si el paciente está en lista negra"""
-        if self.partner_id and self.partner_id.blacklisted:
-            return {
-                'warning': {
-                    'title': 'Paciente en Lista Negra',
-                    'message': f'{self.partner_id.name} está en la Lista Negra. No se permitirá guardar esta cita.',
-                    'type': 'notification'
-                }
-            }
+    def _get_user_timezone(self):
+        """Obtener zona horaria del usuario o usar Guatemala por defecto"""
+        user_tz = self.env.user.tz or 'America/Guatemala'
+        return pytz.timezone(user_tz)
+
+    @api.depends('fecha', 'hora_inicio', 'hora_fin')
+    def _compute_datetime(self):
+        for record in self:
+            if record.fecha and record.hora_inicio and record.hora_fin:
+                hora_inicio_float = float(record.hora_inicio)
+                hora_fin_float = float(record.hora_fin)
+                
+                # Calcular hora y minutos de inicio
+                hours_inicio = int(hora_inicio_float)
+                minutes_inicio = int((hora_inicio_float - hours_inicio) * 60)
+                
+                # Calcular hora y minutos de fin
+                hours_fin = int(hora_fin_float)
+                minutes_fin = int((hora_fin_float - hours_fin) * 60)
+                
+                # Obtener zona horaria del usuario
+                user_tz = record._get_user_timezone()
+                
+                # Crear datetime en zona horaria local
+                fecha_dt = datetime.combine(record.fecha, datetime.min.time())
+                local_inicio = user_tz.localize(fecha_dt.replace(hour=hours_inicio, minute=minutes_inicio))
+                local_fin = user_tz.localize(fecha_dt.replace(hour=hours_fin, minute=minutes_fin))
+                
+                # Convertir a UTC para guardar en BD
+                record.datetime_inicio = local_inicio.astimezone(pytz.UTC).replace(tzinfo=None)
+                record.datetime_fin = local_fin.astimezone(pytz.UTC).replace(tzinfo=None)
+            else:
+                record.datetime_inicio = False
+                record.datetime_fin = False
 
     @api.depends('hora_inicio', 'hora_fin')
     def _compute_duracion(self):
         for record in self:
-            diff = record.hora_fin - record.hora_inicio
-            if diff < 0:
-                diff = 0
-            horas = int(diff)
-            minutos = int((diff - horas) * 60)
-            record.duracion = f"{horas}:{minutos:02d}"
+            if record.hora_inicio and record.hora_fin:
+                inicio = float(record.hora_inicio)
+                fin = float(record.hora_fin)
+                diff = fin - inicio
+                if diff < 0:
+                    diff = 0
+                horas = int(diff)
+                minutos = int((diff - horas) * 60)
+                record.duracion = f"{horas}:{minutos:02d}"
+            else:
+                record.duracion = "0:00"
 
     @api.model_create_multi
     def create(self, vals_list):
-        # Validar lista negra al crear
-        for vals in vals_list:
-            if vals.get('partner_id'):
-                partner = self.env['res.partner'].browse(vals['partner_id'])
-                if partner.blacklisted:
-                    raise ValidationError(
-                        f"No se puede agendar cita para {partner.name} porque está en la Lista Negra."
-                    )
         records = super().create(vals_list)
         for record in records:
             record._create_calendar_event()
@@ -114,7 +174,7 @@ class OpticaCita(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
-        if any(field in vals for field in ['fecha', 'hora_inicio', 'hora_fin', 'partner_id', 'motivo']):
+        if any(field in vals for field in ['fecha', 'hora_inicio', 'hora_fin', 'nombre', 'notas']):
             for record in self:
                 record._update_calendar_event()
         return res
@@ -127,25 +187,27 @@ class OpticaCita(models.Model):
 
     def _create_calendar_event(self):
         self.ensure_one()
-        if self.calendar_event_id:
+        if self.calendar_event_id or not self.nombre:
             return
         
+        hora_inicio_float = float(self.hora_inicio) if self.hora_inicio else 9.0
+        hora_fin_float = float(self.hora_fin) if self.hora_fin else 9.5
+        
         start_datetime = fields.Datetime.to_datetime(self.fecha)
-        hours = int(self.hora_inicio)
-        minutes = int((self.hora_inicio - hours) * 60)
+        hours = int(hora_inicio_float)
+        minutes = int((hora_inicio_float - hours) * 60)
         start_datetime = start_datetime.replace(hour=hours, minute=minutes)
         
-        end_hours = int(self.hora_fin)
-        end_minutes = int((self.hora_fin - end_hours) * 60)
+        end_hours = int(hora_fin_float)
+        end_minutes = int((hora_fin_float - end_hours) * 60)
         stop_datetime = fields.Datetime.to_datetime(self.fecha).replace(hour=end_hours, minute=end_minutes)
         
         event = self.env['calendar.event'].create({
-            'name': f"Cita Óptica: {self.partner_id.name}",
+            'name': f"Cita Óptica: {self.nombre}",
             'start': start_datetime,
             'stop': stop_datetime,
-            'description': self.motivo or '',
+            'description': self.notas or '',
             'user_id': self.optometrista_id.id if self.optometrista_id else self.env.user.id,
-            'partner_ids': [(4, self.partner_id.id)],
         })
         self.calendar_event_id = event.id
 
@@ -154,42 +216,38 @@ class OpticaCita(models.Model):
         if not self.calendar_event_id:
             self._create_calendar_event()
             return
+        if not self.nombre:
+            return
+        
+        hora_inicio_float = float(self.hora_inicio) if self.hora_inicio else 9.0
+        hora_fin_float = float(self.hora_fin) if self.hora_fin else 9.5
         
         start_datetime = fields.Datetime.to_datetime(self.fecha)
-        hours = int(self.hora_inicio)
-        minutes = int((self.hora_inicio - hours) * 60)
+        hours = int(hora_inicio_float)
+        minutes = int((hora_inicio_float - hours) * 60)
         start_datetime = start_datetime.replace(hour=hours, minute=minutes)
         
-        end_hours = int(self.hora_fin)
-        end_minutes = int((self.hora_fin - end_hours) * 60)
+        end_hours = int(hora_fin_float)
+        end_minutes = int((hora_fin_float - end_hours) * 60)
         stop_datetime = fields.Datetime.to_datetime(self.fecha).replace(hour=end_hours, minute=end_minutes)
         
         self.calendar_event_id.write({
-            'name': f"Cita Óptica: {self.partner_id.name}",
+            'name': f"Cita Óptica: {self.nombre}",
             'start': start_datetime,
             'stop': stop_datetime,
-            'description': self.motivo or '',
-            'partner_ids': [(6, 0, [self.partner_id.id])],
+            'description': self.notas or '',
         })
 
     def action_guardar_borrador(self):
-        """Guarda la cita en estado borrador. La validación de lista negra se ejecuta automáticamente."""
         return True
 
     def action_confirmar(self):
-        """Confirmar cita - valida lista negra"""
-        for record in self:
-            if record.partner_id and record.partner_id.blacklisted:
-                raise ValidationError(
-                    f"No se puede confirmar cita para {record.partner_id.name} porque está en la Lista Negra."
-                )
         self.write({'state': 'confirmada'})
 
     def action_completar(self):
         self.write({'state': 'completada'})
 
     def action_cancelar(self):
-        """Cancelar cita - usa SQL directo para evitar validaciones"""
         if self.ids:
             self.env.cr.execute(
                 "UPDATE optica_cita SET state = 'cancelada' WHERE id IN %s",
@@ -199,7 +257,6 @@ class OpticaCita(models.Model):
         return True
 
     def action_no_asistio(self):
-        """Marcar como no asistió - usa SQL directo para evitar validaciones"""
         if self.ids:
             self.env.cr.execute(
                 "UPDATE optica_cita SET state = 'no_asistio' WHERE id IN %s",
@@ -210,14 +267,3 @@ class OpticaCita(models.Model):
 
     def action_reabrir(self):
         self.write({'state': 'borrador'})
-
-    def action_crear_consulta(self):
-        self.ensure_one()
-        return {
-            'type': 'ir.actions.act_window',
-            'name': 'Nueva Consulta',
-            'res_model': 'optica.consulta',
-            'view_mode': 'form',
-            'target': 'current',
-            'context': {'default_partner_id': self.partner_id.id}
-        }

@@ -21,9 +21,6 @@
                     <button name="action_ver_consultas" type="object" class="oe_stat_button" icon="fa-stethoscope" invisible="not is_optica_patient">
                         <field name="consulta_count" widget="statinfo" string="Consultas"/>
                     </button>
-                    <button name="action_ver_citas_optica" type="object" class="oe_stat_button" icon="fa-calendar" invisible="not is_optica_patient">
-                        <field name="cita_optica_count" widget="statinfo" string="Citas Óptica"/>
-                    </button>
                 </xpath>
 
                 <!-- Agregar checkbox de paciente y ficha después del nombre -->
@@ -147,7 +144,7 @@
                     <!-- HISTORIAL DE CONSULTAS -->
                     <separator string="CONSULTAS" invisible="not is_optica_patient"/>
                     <field name="consulta_ids" nolabel="1" invisible="not is_optica_patient" context="{'default_partner_id': id}">
-                        <list string="Consultas" editable="bottom" delete="false">
+                        <list string="Consultas" delete="false">
                             <control>
                                 <create string="Agregar una consulta"/>
                             </control>
