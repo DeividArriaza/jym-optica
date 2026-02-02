@@ -180,6 +180,6 @@ class ResPartner(models.Model):
             'name': 'Nueva Consulta',
             'res_model': 'optica.consulta',
             'view_mode': 'form',
-            'target': 'current',
+            'target': 'new',
             'context': {'default_partner_id': self.id}
         }
