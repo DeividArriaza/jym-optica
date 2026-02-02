@@ -24,7 +24,8 @@
                                 <field name="correo" placeholder="Correo electrónico"/>
                             </group>
                             <group string="Asignación">
-                                <field name="optometrista_id" string="Asignado a"/>
+                                <field name="optometrista_id" invisible="1"/>
+                                <field name="asignado_a" placeholder="Nombre del vendedor"/>
                                 <field name="cantidad_personas"/>
                             </group>
                         </group>
@@ -56,7 +57,7 @@
                     <field name="nombre"/>
                     <field name="telefono"/>
                     <field name="cantidad_personas" string="Personas"/>
-                    <field name="optometrista_id" string="Asignado a"/>
+                    <field name="asignado_a" string="Asignado a"/>
                     <field name="state" widget="badge"/>
                 </list>
             </field>
@@ -67,9 +68,10 @@
             <field name="name">optica.cita.calendar</field>
             <field name="model">optica.cita</field>
             <field name="arch" type="xml">
-                <calendar string="Citas" date_start="datetime_inicio" date_stop="datetime_fin" color="optometrista_id" mode="week" event_open_popup="true" quick_create="false">
+                <calendar string="Citas" date_start="datetime_inicio" date_stop="datetime_fin" color="asignado_a" mode="week" event_open_popup="true" quick_create="false">
                     <field name="nombre"/>
                     <field name="telefono"/>
+                    <field name="asignado_a"/>
                     <field name="cantidad_personas"/>
                     <field name="state"/>
                 </calendar>
@@ -84,7 +86,7 @@
                 <search string="Buscar Cita">
                     <field name="nombre"/>
                     <field name="telefono"/>
-                    <field name="optometrista_id"/>
+                    <field name="asignado_a"/>
                     <field name="fecha"/>
                     <separator/>
                     <filter string="Hoy" name="hoy" domain="[('fecha', '=', context_today())]"/>

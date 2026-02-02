@@ -51,6 +51,11 @@ class OpticaConsulta(models.Model):
         tracking=True
     )
 
+    realizado_por = fields.Char(
+        string='Realizado por',
+        tracking=True
+    )
+
     motivo_consulta = fields.Text(string='Motivo de Consulta')
 
     @api.depends('fecha')

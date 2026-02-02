@@ -97,6 +97,11 @@ class OpticaCita(models.Model):
         default=lambda self: self.env.user,
         tracking=True
     )
+
+    asignado_a = fields.Char(
+        string='Asignado a (Vendedor)',
+        tracking=True
+    )
     
     state = fields.Selection([
         ('borrador', 'Borrador'),
@@ -119,6 +124,17 @@ class OpticaCita(models.Model):
         """Obtener zona horaria del usuario o usar Guatemala por defecto"""
         user_tz = self.env.user.tz or 'America/Guatemala'
         return pytz.timezone(user_tz)
+
+    @api.onchange('hora_inicio')
+    def _onchange_hora_inicio(self):
+        """Al cambiar hora de inicio, auto-poner hora fin +15 min"""
+        if self.hora_inicio:
+            nuevo_fin = float(self.hora_inicio) + 0.25
+            nuevo_fin_str = str(nuevo_fin)
+            # Verificar que el valor existe en las opciones de horario
+            valores_validos = [h[0] for h in self.HORARIOS]
+            if nuevo_fin_str in valores_validos:
+                self.hora_fin = nuevo_fin_str
 
     @api.depends('fecha', 'hora_inicio', 'hora_fin')
     def _compute_datetime(self):
@@ -207,7 +223,7 @@ class OpticaCita(models.Model):
             'start': start_datetime,
             'stop': stop_datetime,
             'description': self.notas or '',
-            'user_id': self.optometrista_id.id if self.optometrista_id else self.env.user.id,
+            'user_id': self.env.user.id,
         })
         self.calendar_event_id = event.id
 

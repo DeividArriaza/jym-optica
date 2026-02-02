@@ -143,13 +143,11 @@
 
                     <!-- HISTORIAL DE CONSULTAS -->
                     <separator string="CONSULTAS" invisible="not is_optica_patient"/>
+                    <button name="action_nueva_consulta" type="object" string="Agregar una consulta" class="btn-primary mb-2" icon="fa-plus" invisible="not is_optica_patient"/>
                     <field name="consulta_ids" nolabel="1" invisible="not is_optica_patient" context="{'default_partner_id': id}">
-                        <list string="Consultas" delete="false">
-                            <control>
-                                <create string="Agregar una consulta"/>
-                            </control>
+                        <list string="Consultas" delete="false" create="false">
                             <field name="fecha_formateada" string="Fecha de Consulta"/>
-                            <field name="optometrista_id" string="Realizado por"/>
+                            <field name="realizado_por" string="Realizado por"/>
                             <field name="rx_observaciones" string="Comentarios"/>
                             <button name="action_eliminar_consulta" type="object" icon="fa-trash" title="Eliminar consulta" confirm="¿Está seguro que desea eliminar esta consulta? Esta acción no se puede deshacer."/>
                         </list>

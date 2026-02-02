@@ -43,7 +43,8 @@
                                 <field name="fecha" string="Fecha" readonly="1"/>
                             </group>
                             <group>
-                                <field name="optometrista_id" string="Realizado por"/>
+                                <field name="optometrista_id" invisible="1"/>
+                                <field name="realizado_por" placeholder="Nombre del consultor"/>
                             </group>
                         </group>
 
